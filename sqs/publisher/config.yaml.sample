@@ -1,0 +1,4 @@
+REGION: ap-southeast-1
+TEXT: hello world
+ENDPOINT: https://sqs.ap-southeast-1.amazonaws.com/************/**************
+LOOP: 3
