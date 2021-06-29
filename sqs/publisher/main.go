@@ -18,6 +18,7 @@ var (
 	sqsSvc      *sqs.SQS
 	dummyText   string
 	sqsEndpoint string
+	origin      string
 	loop        int64
 )
 
@@ -28,7 +29,7 @@ func init() {
 	if isLambda {
 		log.SetLevel(log.InfoLevel)
 		viper.SetEnvPrefix("SNSPUBLISH")
-		viper.BindEnv("REGION", "TEXT", "ENDPOINT", "LOOP")
+		viper.BindEnv("REGION", "TEXT", "ENDPOINT", "LOOP", "ORIGIN")
 	} else {
 		log.SetReportCaller(true)
 		log.SetLevel(log.DebugLevel)
@@ -45,6 +46,7 @@ func init() {
 	dummyText = viper.GetString("TEXT")
 	sqsEndpoint = viper.GetString("ENDPOINT")
 	loop = viper.GetInt64("LOOP")
+	origin = viper.GetString("ORIGIN")
 
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Config: aws.Config{
@@ -56,11 +58,11 @@ func init() {
 		log.Fatalln(err)
 	}
 	sqsSvc = sqs.New(sess)
-
 }
 
 func main() {
 	for loop > 0 {
+		time.Sleep(1 * time.Second)
 		PublishMsg()
 		loop--
 	}
@@ -74,6 +76,10 @@ func PublishMsg() {
 			"CreateTimestamp": &sqs.MessageAttributeValue{
 				DataType:    aws.String("String"),
 				StringValue: aws.String(strconv.FormatInt(unixTime, 10)),
+			},
+			"Origin": &sqs.MessageAttributeValue{
+				DataType:    aws.String("String"),
+				StringValue: aws.String(origin),
 			},
 		},
 		MessageBody: aws.String(dummyText),

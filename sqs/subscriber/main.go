@@ -32,7 +32,7 @@ func init() {
 		viper.SetEnvPrefix("SNSSUBSCRIBE")
 		viper.BindEnv("REGION", "ENDPOINT")
 	} else {
-		log.SetReportCaller(true)
+		// log.SetReportCaller(true)
 		log.SetLevel(log.DebugLevel)
 		viper.SetConfigName("config")
 		viper.SetConfigType("yaml")
@@ -70,7 +70,7 @@ func handler(ctx context.Context, sqsEvent events.SQSEvent) error {
 			continue
 		}
 		proceesTime := (float64(unixNow) - float64(unixSent)) / 1000000000
-		log.WithField("time", proceesTime).Warn("message received")
+		log.WithField("time", proceesTime).Warn(&message.Body)
 
 		_, errDelete := sqsSvc.DeleteMessage(&sqs.DeleteMessageInput{
 			QueueUrl:      &sqsEndpoint,
@@ -113,7 +113,10 @@ func main() {
 					continue
 				}
 				proceesTime := (float64(unixNow) - float64(unixSent)) / 1000000000
-				log.WithField("time", proceesTime).Warn("message received")
+				log.WithFields(log.Fields{
+					"time":   proceesTime,
+					"origin": *message.MessageAttributes["Origin"].StringValue,
+				}).Warn(*message.Body)
 
 				_, errDelete := sqsSvc.DeleteMessage(&sqs.DeleteMessageInput{
 					QueueUrl:      &sqsEndpoint,
